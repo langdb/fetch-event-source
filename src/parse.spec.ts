@@ -5,6 +5,17 @@ describe('parse', () => {
     const decoder = new TextDecoder();
 
     describe('getLines', () => {
+        it('test lines', () => {
+            const msgs = [{ "msg": "" }, { "msg": "Here" }, { "msg": " is" }, { "msg": " an" }, { "msg": " SQL" }, { "msg": " query" }, { "msg": " to" }, { "msg": " create" }, { "msg": " a" }, { "msg": " provider" }, { "msg": " for" }, { "msg": " Open" }, { "msg": "AI" }, { "msg": ":\n\n" }, { "msg": "```" }, { "msg": "sql" }, { "msg": "\n" }, { "msg": "CREATE" }, { "msg": " PROVID" }, { "msg": "ER" }, { "msg": " open" }, { "msg": "_ai" }, { "msg": "_provider" }, { "msg": " ENGINE" }, { "msg": " =" }, { "msg": " Open" }, { "msg": "AI" }, { "msg": "(\n" }, { "msg": " " }, { "msg": " api" }, { "msg": "_key" }, { "msg": " =" }, { "msg": " '" }, { "msg": "your" }, { "msg": "_api" }, { "msg": "_key" }, { "msg": "'\n" }, { "msg": ");\n" }, { "msg": "```" }, { "msg": " \n\n" }, { "msg": "Make" }, { "msg": " sure" }, { "msg": " to" }, { "msg": " replace" }, { "msg": " `'" }, { "msg": "your" }, { "msg": "_api" }, { "msg": "_key" }, { "msg": "'" }, { "msg": "`" }, { "msg": " with" }, { "msg": " your" }, { "msg": " actual" }, { "msg": " Open" }, { "msg": "AI" }, { "msg": " API" }, { "msg": " key" }, { "msg": "." }];
+            let lineNum = 0;
+            const next = parse.getLines((line, _fieldLength) => {
+                ++lineNum;
+                console.log(line);
+            });
+            msgs.forEach(msg => {
+                next(encoder.encode(`data: ${msg}`));
+            })
+        });
         it('single line', () => {
             // arrange:
             let lineNum = 0;
@@ -16,7 +27,8 @@ describe('parse', () => {
 
             // act:
             next(encoder.encode('id: abc\n'));
-            
+
+
             // assert:
             expect(lineNum).toBe(1);
         });
@@ -29,11 +41,11 @@ describe('parse', () => {
                 expect(decoder.decode(line)).toEqual(lineNum === 1 ? 'id: abc' : 'data: def');
                 expect(fieldLength).toEqual(lineNum === 1 ? 2 : 4);
             });
-            
+
             // act:
             next(encoder.encode('id: abc\n'));
             next(encoder.encode('data: def\n'));
-            
+
             // assert:
             expect(lineNum).toBe(2);
         });
@@ -50,7 +62,7 @@ describe('parse', () => {
             // act:
             next(encoder.encode('id: a'));
             next(encoder.encode('bc\n'));
-            
+
             // assert:
             expect(lineNum).toBe(1);
         });
@@ -63,12 +75,12 @@ describe('parse', () => {
                 expect(decoder.decode(line)).toEqual(lineNum === 1 ? 'id: abc' : 'data: def');
                 expect(fieldLength).toEqual(lineNum === 1 ? 2 : 4);
             });
-            
+
             // act:
             next(encoder.encode('id: ab'));
             next(encoder.encode('c\nda'));
             next(encoder.encode('ta: def\n'));
-            
+
             // assert:
             expect(lineNum).toBe(2);
         });
@@ -84,7 +96,7 @@ describe('parse', () => {
 
             // act:
             next(encoder.encode('\n'));
-            
+
             // assert:
             expect(lineNum).toBe(1);
         });
@@ -100,7 +112,7 @@ describe('parse', () => {
 
             // act:
             next(encoder.encode(': this is a comment\n'));
-            
+
             // assert:
             expect(lineNum).toBe(1);
         });
@@ -116,7 +128,7 @@ describe('parse', () => {
 
             // act:
             next(encoder.encode('this is an invalid line\n'));
-            
+
             // assert:
             expect(lineNum).toBe(1);
         });
@@ -132,7 +144,7 @@ describe('parse', () => {
 
             // act:
             next(encoder.encode('id: abc: def\n'));
-            
+
             // assert:
             expect(lineNum).toBe(1);
         });
@@ -148,7 +160,7 @@ describe('parse', () => {
 
             // act:
             next(encoder.encode('id: abc\ndata: def\n'));
-            
+
             // assert:
             expect(lineNum).toBe(2);
         });
@@ -164,7 +176,7 @@ describe('parse', () => {
 
             // act:
             next(encoder.encode('id: abc\rdata: def\r'));
-            
+
             // assert:
             expect(lineNum).toBe(2);
         });
@@ -180,7 +192,7 @@ describe('parse', () => {
 
             // act:
             next(encoder.encode('id: abc\r\ndata: def\r\n'));
-            
+
             // assert:
             expect(lineNum).toBe(2);
         });
@@ -239,7 +251,7 @@ describe('parse', () => {
             // assert:
             expect(msgNum).toBe(1);
         });
-        
+
         it('ignore non-integer retry', () => {
             let msgNum = 0;
             const next = parse.getMessages(_id => {
